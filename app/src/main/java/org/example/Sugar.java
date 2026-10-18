@@ -1,8 +1,8 @@
 package org.example;
 
-public class CupsOfSugar extends Ingredient
+public class Sugar extends Ingredient
 {
-    public CupsOfSugar()
+    public Sugar()
     {
         super("Sugar", 0.50);
     }

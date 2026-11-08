@@ -4,7 +4,8 @@ import java.util.Random;
 
 public class Day {
     private static final int MAX_CUSTOMERS = 500;
-    private int dayNumber;
+    private static final double RENT_AMOUNT = 20.00;
+    private int dayNumber = 1;
 
     public Day(int dayNumber)
     {
@@ -13,12 +14,28 @@ public class Day {
 
     public void playDay(Player player, Scanner scanner)
     {
-        System.out.println("\nDay " + dayNumber + ": Preparation Phase");
-        System.out.println("Let's prepare for the day!\n");
-        printStatus(player);
-        runPreparationPhase(player, scanner);
-        runSellingPhase(player);
-        player.getInventory().endOfDay();
+        boolean isPlaying = true;
+
+        do {
+
+            System.out.println("\nDay " + dayNumber + ": Preparation Phase");
+            System.out.println("Let's prepare for the day!\n");
+
+            payRent(player);
+
+            if (isBankrupt(player)) {
+                System.out.println("\nYou're out of money...");
+                System.out.println("Game over.");
+                System.out.println("You made it to day " + dayNumber);
+                return;
+            }
+
+            printStatus(player);
+            runPreparationPhase(player, scanner);
+            runSellingPhase(player);
+            player.getInventory().endOfDay();
+            dayNumber += 1;
+        } while (isPlaying);
     }
 
     private void printStatus(Player player)
@@ -110,7 +127,7 @@ public class Day {
                     preparing = false;
                     break;
                 default:
-                    System.out.println("Invalid input. Please choose a value 1-5");
+                    System.out.println("Invalid input. Please choose a value 1-6");
             }
         }
     }
@@ -150,6 +167,39 @@ public class Day {
         System.out.println("\nDay " + dayNumber + ": Selling Phase");
 
         int customers = random.nextInt(MAX_CUSTOMERS) + 1;
+
+        double multiplier = Multiplier.applyMultiplier(recipe);
+        customers = (int) Math.round(customers * multiplier);
+
+        if (multiplier == 0.0)
+        {
+            System.out.println("I'm not too sure why you thought selling lemon juice would attract customers.");
+            System.out.println("You're running a lemonade stand, not a lemon juice stand.");
+            System.out.println("Consider adding water to your recipe next time.");
+        }
+        else if (multiplier == 0.1)
+        {
+            System.out.println("That's nice of you to offer water, but this is false advertising.");
+            System.out.println("You're running a lemonade stand, not a water stand.");
+            System.out.println("Consider adding lemons and sugar to your recipe next time.");
+        }
+        else if (multiplier == 0.5)
+        {
+            System.out.println("Lemon water is nice, but you can't call it lemonade.");
+            System.out.println("You're running a lemonade stand, not a lemon water stand.");
+            System.out.println("Consider adding sugar to your recipe next time.");
+        }
+        else if (multiplier == 1.25)
+        {
+            System.out.println("The quality of your lemonade attracted a lot of customers!");
+            System.out.println("Some might say your recipe is almost perfect...");
+        }
+        else if (multiplier == 1.50)
+        {
+            System.out.println("Your recipe was a huge success!");
+            System.out.println("Everyone in town is talking about your lemonade :)");
+        }
+
         int cupsStocked = inventory.getCupsAvailable();
         int cupsSold = 0;
 
@@ -165,7 +215,7 @@ public class Day {
         int cupsWasted = cupsStocked - cupsSold;
         double profit = cupsSold * recipe.getPricePerCup();
 
-        System.out.println(customers + " customers turned up");
+        System.out.println(customers + " customers turned up.");
         System.out.println("You sold " + cupsSold + " cups at $" + recipe.getPricePerCup() + " each.");
         System.out.printf("You earned $%.2f%n", profit);
         player.addMoney(profit);
@@ -178,6 +228,11 @@ public class Day {
         if (cupsWasted > 0)
         {
             System.out.println("Unfortunately, " + cupsWasted + " unsold cups of lemonade were dumped out...");
+        }
+
+        else
+        {
+            System.out.println("\nLet's get a good night sleep and try again tomorrow!");
         }
     }
 
@@ -209,5 +264,24 @@ public class Day {
                 System.out.println("Please enter a number: ");
             }
         }
+    }
+
+    private void payRent(Player player)
+    {
+        if (dayNumber == 1)
+        {
+            System.out.println("You will have to pay $" + RENT_AMOUNT + " each day.");
+            System.out.println("We'll let you off the hook for the first day :)");
+        }
+        else
+        {
+            player.subtractMoney(RENT_AMOUNT);
+            System.out.println("You paid your landlord $" + RENT_AMOUNT + " for rent");
+        }
+    }
+
+    public boolean isBankrupt(Player player)
+    {
+        return player.getMoney() < 0.00;
     }
 }
